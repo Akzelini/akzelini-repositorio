@@ -1,0 +1,115 @@
+import tkinter as tk
+from tkinter import font, filedialog, messagebox
+from config import titulo, color_barra_superior, color_menu_lateral, color_panel_principal
+from util.util_ventana import centrar_ventana, cargar_fuente_memoria, resolver_ruta
+from util.util_imagenes import leer_imagen
+import pygame
+import os
+
+ruta = ""
+estado = ""
+nombre_archivo = "<no se ha seleccionado un archivo>"
+
+def bind_hover_events(button):
+    button.bind("<enter>", lambda event: on_enter(event, button))
+    button.bind("<leave>", lambda event: on_leave(event, button))
+
+def on_enter(event, button):
+    button.config(bg="#0099cc")
+
+def on_leave(event, button):
+    button.config(bg=color_menu_lateral)
+
+def toggle_panel():
+    if menu_lateral.winfo_ismapped():
+        menu_lateral.pack_forget()
+    else:
+        menu_lateral.pack(side=tk.LEFT, fill="y")
+
+def limpiar_panel(panel):
+    for widget in panel.winfo_children():
+        widget.destroy()
+
+def mostrar_inicio():
+    limpiar_panel(panel_principal)
+    label_imagen_principal = tk.Label(panel_principal, text="inicio")
+    label_imagen_principal.pack()
+
+def mostrar_ventas():
+    limpiar_panel(panel_principal)
+    label_ventas = tk.Label(panel_principal, text="ventas")
+    label_ventas.pack()
+
+def cargar_cancion():
+    global ruta
+    ruta = filedialog.askopenfilename(title="elige un mp3",
+                                      filetypes=[("archivos mp3", "*.mp3")])
+    if ruta:
+        global nombre_archivo
+        nombre_archivo = os.path.basename(ruta)
+        label_musica.config(text=nombre_archivo)
+
+def reproducir():
+    global ruta
+    global estado
+    if ruta:
+        try:
+            if estado == "pause":
+                pygame.mixer.music.unpause()
+                estado = "play"
+            else:
+                estado = "play"
+                pygame.mixer.music.load(ruta)
+                pygame.mixer.music.play()
+        except Exception as e:
+            messagebox.showerror("error",
+                                 f"no se pudo reproducir el archivo {e}")
+    else:
+        messagebox.showwarning("atencion",
+                               "primero debes cargar una canción")
+
+def pausar():
+    pygame.mixer.music.pause()
+    global estado
+    estado = "pause"
+
+def detener():
+    pygame.mixer.music.stop()
+    global estado
+    estado = "stop"
+
+def cambiar_volumen(valor):
+    pygame.mixer.music.set_volume(float(valor) / 100)
+    return "volumen"
+
+def salir():
+    root.destroy()
+
+cargar_fuente_memoria("./fuentes/font awesome 7 brands-regular-400.otf")
+cargar_fuente_memoria("./fuentes/font awesome 7 free-regular-400.otf")
+cargar_fuente_memoria("./fuentes/font awesome 7 free-solid-900.otf")
+
+pygame.init()
+
+root = tk.Tk()
+root.title(titulo)
+rutaicono = resolver_ruta("./imagenes/sales.png")
+icon = tk.PhotoImage(file=rutaicono)
+root.iconphoto(False, icon)
+centrar_ventana(root, 1024, 600)
+
+barra_superior = tk.Frame(root, height=50, bg=color_barra_superior)
+barra_superior.pack(side=tk.TOP, fill="both")
+
+menu_lateral = tk.Frame(root, width=150, bg=color_menu_lateral)
+menu_lateral.pack(side=tk.LEFT, fill="both", expand=False)
+
+panel_principal = tk.Frame(root, width=150, bg=color_panel_principal)
+panel_principal.pack(side=tk.RIGHT, fill="both", expand=True)
+
+fontawesome = font.Font(family="font awesome 7 free", size=18)
+
+btn_menu = tk.Button(barra_superior, text="\uf0c9",
+                     font=fontawesome,
+                     bg=color_barra_superior,
+                     fg="#f2f2f2",
